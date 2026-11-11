@@ -1,9 +1,10 @@
 # tests/conftest.py
 
 import subprocess
+import sys
 import time
 import logging
-from typing import Generator, Dict, List
+from typing import Dict, Generator, List, Optional
 from contextlib import contextmanager
 
 import pytest
@@ -218,9 +219,10 @@ def fastapi_server():
     server_url = 'http://127.0.0.1:8000/'
     logger.info("Starting test server...")
 
+    process: Optional[subprocess.Popen[bytes]] = None
     try:
         process = subprocess.Popen(
-            ['python', 'main.py'],
+            [sys.executable, 'main.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
@@ -235,13 +237,14 @@ def fastapi_server():
         raise
     finally:
         logger.info("Terminating test server...")
-        process.terminate()
-        try:
-            process.wait(timeout=5)
-            logger.info("Test server terminated gracefully.")
-        except subprocess.TimeoutExpired:
-            logger.warning("Test server did not terminate in time; killing it.")
-            process.kill()
+        if process is not None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+                logger.info("Test server terminated gracefully.")
+            except subprocess.TimeoutExpired:
+                logger.warning("Test server did not terminate in time; killing it.")
+                process.kill()
 
 # ======================================================================================
 # Browser and Page Fixtures (Optional)
