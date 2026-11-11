@@ -16,7 +16,7 @@ def test_password_hashing(db_session, fake_user_data):
         last_name=fake_user_data['last_name'],
         email=fake_user_data['email'],
         username=fake_user_data['username'],
-        password=hashed
+        password_hash=hashed
     )
     
     assert user.verify_password(original_password) is True
@@ -86,6 +86,19 @@ def test_user_authentication(db_session, fake_user_data):
     assert "token_type" in auth_result
     assert auth_result["token_type"] == "bearer"
     assert "user" in auth_result
+
+
+def test_user_authentication_rejects_wrong_password(db_session, fake_user_data):
+    fake_user_data['password'] = "TestPass123"
+    User.register(db_session, fake_user_data)
+    db_session.commit()
+
+    assert User.authenticate(
+        db_session,
+        fake_user_data['username'],
+        "WrongPass123",
+    ) is None
+
 
 def test_user_last_login_update(db_session, fake_user_data):
     """Test that last_login is updated on authentication"""
@@ -194,3 +207,33 @@ def test_missing_password_registration(db_session):
     # Adjust the expected error message
     with pytest.raises(ValueError, match="Password must be at least 6 characters long"):
         User.register(db_session, test_data)
+
+
+def test_registration_stores_only_a_hash(db_session):
+    user_data = {
+        "first_name": "Secure",
+        "last_name": "User",
+        "email": "secure.user@example.com",
+        "username": "secureuser",
+        "password": "TestPass123",
+    }
+
+    user = User.register(db_session, user_data)
+    db_session.commit()
+    db_session.refresh(user)
+
+    assert user.password_hash != user_data["password"]
+    assert user.verify_password(user_data["password"])
+
+
+def test_registration_rejects_invalid_email(db_session):
+    user_data = {
+        "email": "invalid-email",
+        "username": "invalidemail",
+        "password": "TestPass123",
+    }
+
+    with pytest.raises(ValueError):
+        User.register(db_session, user_data)
+
+    assert db_session.query(User).count() == 0

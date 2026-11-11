@@ -1,7 +1,29 @@
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.schemas.base import PasswordMixin
+
+
+class UserCreate(PasswordMixin):
+    """Validated input for registering a user."""
+
+    username: str = Field(min_length=3, max_length=50)
+    email: EmailStr
+    first_name: str = Field(default="", max_length=50)
+    last_name: str = Field(default="", max_length=50)
+
+
+class UserRead(BaseModel):
+    """Public user details; password hashes are never serialized."""
+
+    id: UUID
+    username: str
+    email: EmailStr
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class UserResponse(BaseModel):
     """Schema for user response data"""
