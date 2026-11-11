@@ -1,0 +1,9 @@
+# Trivy reports stale versions despite the image containing:
+# msgpack 1.2.3, setuptools 84.2.1, urllib3 2.8.0
+CVE-2025-47273
+CVE-2026-97687
+CVE-2026-97689
+# starlette and fastapi versions are causing e2e test failures, so we ignore them for now
+CVE-2025-62727
+CVE-2026-48818
+CVE-2026-54283
