@@ -63,6 +63,11 @@ async def read_root(request: Request):
     """
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/health")
+async def health_check():
+    """Provide a lightweight health endpoint for container orchestration."""
+    return {"status": "ok"}
+
 @app.post("/add", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
 async def add_route(operation: OperationRequest):
     """
